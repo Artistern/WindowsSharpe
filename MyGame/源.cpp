@@ -6,7 +6,8 @@
 #include <cstdio>
 #pragma comment(lib,"winmm.lib")
 HINSTANCE hinstance_pop;
-char buffer[256];
+TCHAR buffer[256]=TEXT("hello");
+int line = 0;
 static int wm_paint_num = 0;
 LRESULT CALLBACK WindowPro(HWND hwnd,
 							UINT msg,
@@ -50,7 +51,15 @@ LRESULT CALLBACK WindowPro(HWND hwnd,
 	}break;
 	case WM_CLOSE:
 	{
-		return (DefWindowProc(hwnd, msg, wparam,lparam));
+			int result = MessageBox(hwnd, TEXT("是否关闭"), TEXT("文版框"), MB_YESNO | MB_ICONERROR);
+			if(result==IDYES)
+			{
+				return (DefWindowProc(hwnd, msg, wparam, lparam));
+			}else
+			{
+				return 0;
+			}
+		
 	}break;
 	case WM_DESTROY:
 		{
@@ -70,7 +79,7 @@ int WINAPI WinMain(
 )
 {
 	//MessageBeep(MB_OK);
-
+	HDC hdc;
 	WNDCLASSEX winclass;
 	HWND hwnd;
 	MSG msg;
@@ -109,6 +118,7 @@ int WINAPI WinMain(
 		return 0;
 	}
 	//HDC hdc = GetDC(hwnd);
+	bool isEnter = false;
 	while (true)
 	{
 		if(PeekMessage(&msg,NULL,0,0,PM_REMOVE))//如果消息队列里面没有对应的消息，就直接执行下面的程序
@@ -125,6 +135,26 @@ int WINAPI WinMain(
 		SetBkMode(hdc, TRANSPARENT);
 		TextOut(hdc, rand() % 400, rand() % 400, TEXT("GDI TEXT DOME"), sizeof("GDITEXTDOME"));
 		ReleaseDC(hwnd, hdc);*/
+		hdc = GetDC(hwnd);
+
+		SetTextColor(hdc, RGB(0, 255, 0));
+
+		SetBkColor(hdc, RGB(0, 0, 0));
+
+		SetBkMode(hdc, OPAQUE);
+
+		if(KEYDOWN(VK_RIGHT)&&isEnter==false)
+		{
+			int iLength = wsprintf(buffer, TEXT("The key is %d", KEYDOWN(VK_RIGHT)));
+			TextOut(hdc, 0, line, buffer, iLength);
+			line += 16;
+			isEnter = true;
+		}
+		if (KEYUP(VK_RIGHT) && isEnter == true)
+		{
+			isEnter = false;
+		}
+		ReleaseDC(hwnd, hdc);
 	}
 	return (msg.wParam);
 }
