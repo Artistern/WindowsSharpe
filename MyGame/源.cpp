@@ -4,11 +4,17 @@
 #include <winuser.h>
 #include "resource2.h"
 #include <cstdio>
+
+
 #pragma comment(lib,"winmm.lib")
 HINSTANCE hinstance_pop;
 TCHAR buffer[256]=TEXT("hello");
 int line = 0;
 static int wm_paint_num = 0;
+POINT point;
+
+
+bool isDraw = false;
 LRESULT CALLBACK WindowPro(HWND hwnd,
 							UINT msg,
 							WPARAM wparam,
@@ -38,6 +44,14 @@ LRESULT CALLBACK WindowPro(HWND hwnd,
 			}break;
 			default:break;
 			}
+		}break;
+	case WM_LBUTTONDOWN:
+		{
+		isDraw = true;
+		}break;
+	case WM_LBUTTONUP:
+		{
+		isDraw = false;
 		}break;
 	case WM_PAINT:
 		{
@@ -78,11 +92,10 @@ int WINAPI WinMain(
 	int ncmdshow
 )
 {
-	//MessageBeep(MB_OK);
-	HDC hdc;
 	WNDCLASSEX winclass;
 	HWND hwnd;
 	MSG msg;
+	HDC hdc;
 
 	winclass.cbSize = sizeof(WNDCLASSEX);//描述字段大小
 	winclass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC | CS_DBLCLKS;
@@ -117,8 +130,6 @@ int WINAPI WinMain(
 	{
 		return 0;
 	}
-	//HDC hdc = GetDC(hwnd);
-	bool isEnter = false;
 	while (true)
 	{
 		if(PeekMessage(&msg,NULL,0,0,PM_REMOVE))//如果消息队列里面没有对应的消息，就直接执行下面的程序
@@ -130,31 +141,26 @@ int WINAPI WinMain(
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);//调用winProc
 		}
-		/*SetTextColor(hdc, RGB(rand() % 255, rand() % 255, rand() % 255));
-		SetBkColor(hdc, RGB(rand() % 255, rand() % 255, rand() % 255));
-		SetBkMode(hdc, TRANSPARENT);
-		TextOut(hdc, rand() % 400, rand() % 400, TEXT("GDI TEXT DOME"), sizeof("GDITEXTDOME"));
-		ReleaseDC(hwnd, hdc);*/
-		hdc = GetDC(hwnd);
-
-		SetTextColor(hdc, RGB(0, 255, 0));
-
-		SetBkColor(hdc, RGB(0, 0, 0));
-
-		SetBkMode(hdc, OPAQUE);
-
-		if(KEYDOWN(VK_RIGHT)&&isEnter==false)
+		if(KEYDOWN(VK_ESCAPE))
 		{
-			int iLength = wsprintf(buffer, TEXT("The key is %d", KEYDOWN(VK_RIGHT)));
-			TextOut(hdc, 0, line, buffer, iLength);
-			line += 16;
-			isEnter = true;
-		}
-		if (KEYUP(VK_RIGHT) && isEnter == true)
+			PostMessage(hwnd, WM_DESTROY, 0, 0);
+		}else if(isDraw==true)
 		{
-			isEnter = false;
+			GetCursorPos(&point);
+			ScreenToClient(hwnd, &point);
+			int x = point.x;
+			int y = point.y;
+			hdc = GetDC(hwnd);
+			HPEN blue_pen = CreatePen(PS_SOLID, 5, RGB(0, 0, 255));
+			SelectObject(hdc, blue_pen);
+			Rectangle(hdc, x + 0.5, y + 0.5, x - 0.5, y - 0.5);
+			DeleteObject(blue_pen);
+			ReleaseDC(hwnd, hdc);
 		}
-		ReleaseDC(hwnd, hdc);
+		else if(KEYDOWN(VK_DELETE))
+		{
+			winclass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+		}
 	}
 	return (msg.wParam);
 }

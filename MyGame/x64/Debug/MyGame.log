@@ -1,4 +1,4 @@
 ﻿  源.cpp
-e:\githubcode\windowssharpe\windowssharpe\mygame\源.cpp(148): warning C4002: 类函数宏的调用“TEXT”参数过多
-e:\githubcode\windowssharpe\windowssharpe\mygame\源.cpp(159): warning C4244: “return”: 从“WPARAM”转换到“int”，可能丢失数据
+e:\githubcode\windowssharpe\windowssharpe\mygame\源.cpp(156): warning C4244: “参数”: 从“double”转换到“int”，可能丢失数据
+e:\githubcode\windowssharpe\windowssharpe\mygame\源.cpp(165): warning C4244: “return”: 从“WPARAM”转换到“int”，可能丢失数据
   MyGame.vcxproj -> E:\GitHubCode\windowsSharpe\WindowsSharpe\x64\Debug\MyGame.exe
