@@ -1,4 +1,5 @@
 ﻿  源.cpp
-e:\githubcode\windowssharpe\windowssharpe\mygame\源.cpp(156): warning C4244: “参数”: 从“double”转换到“int”，可能丢失数据
+e:\githubcode\windowssharpe\windowssharpe\mygame\源.cpp(44): warning C4101: “hdc”: 未引用的局部变量
+e:\githubcode\windowssharpe\windowssharpe\mygame\源.cpp(43): warning C4101: “ps”: 未引用的局部变量
 e:\githubcode\windowssharpe\windowssharpe\mygame\源.cpp(165): warning C4244: “return”: 从“WPARAM”转换到“int”，可能丢失数据
   MyGame.vcxproj -> E:\GitHubCode\windowsSharpe\WindowsSharpe\x64\Debug\MyGame.exe

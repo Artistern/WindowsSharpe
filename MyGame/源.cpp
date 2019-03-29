@@ -10,11 +10,31 @@
 HINSTANCE hinstance_pop;
 TCHAR buffer[256]=TEXT("hello");
 int line = 0;
-static int wm_paint_num = 0;
 POINT point;
 
+HWND Main_Hwnd;
 
 bool isDraw = false;
+int Game_Init(void *parms=NULL)
+{
+	//初始化
+	return 1;
+}
+int Game_Main(void *parms=NULL)
+{
+	//主进程
+	if (KEYDOWN(VK_ESCAPE))
+	{
+		PostMessage(Main_Hwnd, WM_DESTROY, 0, 0);
+	}
+	return 1;
+}
+int Game_Shutdown(void *parms=NULL)
+{
+	//结束
+	return 1;
+}
+//进程
 LRESULT CALLBACK WindowPro(HWND hwnd,
 							UINT msg,
 							WPARAM wparam,
@@ -35,7 +55,6 @@ LRESULT CALLBACK WindowPro(HWND hwnd,
 			{
 			case MENU_FILE_ID_OPEN:
 				{
-				//MessageBox(hwnd, TEXT("11"), TEXT("222"), MB_OK);
 				PlaySound(MAKEINTRESOURCE(IDR_WAVE1), hinstance_pop, SND_ASYNC | SND_RESOURCE);
 				}break;
 			case MENU_FILE_ID_CLOSE:
@@ -55,25 +74,20 @@ LRESULT CALLBACK WindowPro(HWND hwnd,
 		}break;
 	case WM_PAINT:
 		{
-		hdc = BeginPaint(hwnd, &ps);
+		//GetWindowRect(hwnd, &rect);
+		//width = rect.right - rect.left;
+		//high = rect.top - rect.bottom;
+		/*hdc = BeginPaint(hwnd, &ps);
 		SetTextColor(hdc, RGB(rand() % 255, rand() % 255, rand() % 255));
 		SetBkColor(hdc, RGB(rand() % 255, rand() % 255, rand() % 255));
 		SetBkMode(hdc, TRANSPARENT);
 		TextOut(hdc, rand() % 400, rand() % 400, TEXT("GDI TEXT DOME"), sizeof("GDITEXTDOME"));
-		EndPaint(hwnd, &ps);
+		EndPaint(hwnd, &ps);*/
 		return 0;
 	}break;
 	case WM_CLOSE:
-	{
-			int result = MessageBox(hwnd, TEXT("是否关闭"), TEXT("文版框"), MB_YESNO | MB_ICONERROR);
-			if(result==IDYES)
-			{
-				return (DefWindowProc(hwnd, msg, wparam, lparam));
-			}else
-			{
-				return 0;
-			}
-		
+	{		
+		return (DefWindowProc(hwnd, msg, wparam, lparam));	
 	}break;
 	case WM_DESTROY:
 		{
@@ -95,7 +109,6 @@ int WINAPI WinMain(
 	WNDCLASSEX winclass;
 	HWND hwnd;
 	MSG msg;
-	HDC hdc;
 
 	winclass.cbSize = sizeof(WNDCLASSEX);//描述字段大小
 	winclass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC | CS_DBLCLKS;
@@ -119,7 +132,7 @@ int WINAPI WinMain(
 	//创建窗口的操作
 	if (!(hwnd = CreateWindowEx(NULL, 
 				winclass.lpszClassName, 
-				TEXT("傻子"), 
+				TEXT("游戏控制台"), 
 				WS_POPUP|WS_OVERLAPPEDWINDOW | WS_VISIBLE, 
 				0, 0, 
 				400, 400, 
@@ -130,8 +143,12 @@ int WINAPI WinMain(
 	{
 		return 0;
 	}
+	Main_Hwnd = hwnd;
+	srand(GetTickCount());
+	Game_Init();
 	while (true)
 	{
+		int startTime = GetTickCount();
 		if(PeekMessage(&msg,NULL,0,0,PM_REMOVE))//如果消息队列里面没有对应的消息，就直接执行下面的程序
 		{
 			if(msg.message==WM_QUIT)//当消息队列中产生一个退出指令
@@ -141,26 +158,9 @@ int WINAPI WinMain(
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);//调用winProc
 		}
-		if(KEYDOWN(VK_ESCAPE))
-		{
-			PostMessage(hwnd, WM_DESTROY, 0, 0);
-		}else if(isDraw==true)
-		{
-			GetCursorPos(&point);
-			ScreenToClient(hwnd, &point);
-			int x = point.x;
-			int y = point.y;
-			hdc = GetDC(hwnd);
-			HPEN blue_pen = CreatePen(PS_SOLID, 5, RGB(0, 0, 255));
-			SelectObject(hdc, blue_pen);
-			Rectangle(hdc, x + 0.5, y + 0.5, x - 0.5, y - 0.5);
-			DeleteObject(blue_pen);
-			ReleaseDC(hwnd, hdc);
-		}
-		else if(KEYDOWN(VK_DELETE))
-		{
-			winclass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-		}
+		Game_Main();
+		while ((GetTickCount()- startTime)>33);
 	}
+	Game_Shutdown();
 	return (msg.wParam);
 }
