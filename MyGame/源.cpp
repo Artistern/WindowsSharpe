@@ -3,21 +3,62 @@
 #include<Mmsystem.h>
 #include <winuser.h>
 #include "resource2.h"
+#include <ddraw.h>
 #include <cstdio>
 
-
+#pragma comment(lib,"ddraw.lib")
 #pragma comment(lib,"winmm.lib")
+#pragma comment(lib,"dxguid.lib")
 HINSTANCE hinstance_pop;
-TCHAR buffer[256]=TEXT("hello");
 int line = 0;
 POINT point;
 
 HWND Main_Hwnd;
 
-bool isDraw = false;
+//directdraw7.0
+LPDIRECTDRAW lpdd;
+
+
 int Game_Init(void *parms=NULL)
 {
+	PALETTEENTRY palet[256];
+
+	for(int color=0;color<256;color++)
+	{
+		palet[color].peGreen = rand() % 255;
+		palet[color].peBlue = rand() % 255;
+		palet[color].peRed = rand() % 255;
+
+		palet[color].peFlags = PC_NOCOLLAPSE;
+	}
+	palet[0].peGreen = 0;
+	palet[0].peBlue = 0;
+	palet[0].peRed = 0;
+	palet[0].peFlags = PC_NOCOLLAPSE;
+
+	palet[255].peGreen = 255;
+	palet[255].peBlue = 255;
+	palet[255].peRed = 255;
+	palet[255].peFlags = PC_NOCOLLAPSE;
 	//初始化
+	if(FAILED(DirectDrawCreateEx(NULL,(void**)&lpdd,IID_IDirectDraw7,NULL)))
+	{
+		return 0;
+	}
+	if(FAILED(lpdd->SetCooperativeLevel(Main_Hwnd, DDSCL_FULLSCREEN | DDSCL_ALLOWMODEX | DDSCL_ALLOWREBOOT | DDSCL_EXCLUSIVE)))
+	{
+		return 0;
+	}
+	if(FAILED(lpdd->SetDisplayMode(800, 600, 8)))
+	{
+		return 0;
+	}
+	LPDIRECTDRAWPALETTE lpddpal = NULL;
+	if(FAILED(lpdd->CreatePalette(DDPCAPS_8BIT|DDPCAPS_ALLOW256|DDPCAPS_INITIALIZE,palet, &lpddpal,NULL)))
+	{
+		return 0;
+	}
+	
 	return 1;
 }
 int Game_Main(void *parms=NULL)
@@ -31,6 +72,12 @@ int Game_Main(void *parms=NULL)
 }
 int Game_Shutdown(void *parms=NULL)
 {
+	if(lpdd)
+	{
+		lpdd->Release();
+		lpdd = NULL;
+
+	}
 	//结束
 	return 1;
 }
@@ -63,14 +110,6 @@ LRESULT CALLBACK WindowPro(HWND hwnd,
 			}break;
 			default:break;
 			}
-		}break;
-	case WM_LBUTTONDOWN:
-		{
-		isDraw = true;
-		}break;
-	case WM_LBUTTONUP:
-		{
-		isDraw = false;
 		}break;
 	case WM_PAINT:
 		{
@@ -159,7 +198,7 @@ int WINAPI WinMain(
 			DispatchMessage(&msg);//调用winProc
 		}
 		Game_Main();
-		while ((GetTickCount()- startTime)>33);
+		while ((GetTickCount()- startTime)<33);
 	}
 	Game_Shutdown();
 	return (msg.wParam);
