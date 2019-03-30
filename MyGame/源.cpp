@@ -14,6 +14,7 @@
 #define MAX_COLORS      256  // maximum colors
 #define WINDOW_CLASS_NAME "WINCLASS1"
 #define DD_INIT_STRUCT(ddstruct) { memset(&ddstruct,0,sizeof(ddstruct)); ddstruct.dwSize=sizeof(ddstruct); }
+#define _RGB32BIT8888(a,r,g,b)	((b)+((g)<<8)+((r)<<16)+((a)<<24))
 //********************定义句柄*************************
 HINSTANCE		hinstance_pop=NULL;
 HWND			Main_Hwnd=NULL;
@@ -22,9 +23,19 @@ LPDIRECTDRAW7			lpdd;
 DDSURFACEDESC2			ddsd;
 LPDIRECTDRAWSURFACE7	lpddsprimary=NULL;
 LPDIRECTDRAWPALETTE		lpddpal = NULL;   // a pointer to the created dd palette
-PALETTEENTRY          palette[256];          // color palette
+PALETTEENTRY			palette[256];          // color palette
+DDPIXELFORMAT			ddpixel;//像素格式
 //********************定义辅助变量*********************
 int line = 0;
+//*********************32位色彩************************
+inline void Plot_Pixel_32(int x,int y,
+							int alphe,int red,int green,int blue,
+							LONG *video_buffer,int lpitch32)
+{
+	LONG pixel = _RGB32BIT8888(alphe, red, green, blue);
+
+	video_buffer[x + y * (lpitch32<<2)] = pixel;
+}
 //********************初始化进程***********************
 int Game_Init(void *parms = NULL)
 {
@@ -44,7 +55,7 @@ int Game_Init(void *parms = NULL)
 	} 
 
 	;
-	//设置视频模式,640*480*8,错误点
+	//设置视频模式,WIDTH*HEIGHT*32(已经修正)
 	if (FAILED(lpdd->SetDisplayMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, 0, 0)))
 	{
 		return(0);
@@ -96,51 +107,21 @@ int Game_Init(void *parms = NULL)
 	{
 		return 0;
 	}
+	//获取像素格式
+	
 	return 1;
 }
 //*******************主进程****************************
 int Game_Main(void *parms=NULL)
 {
-	if(KEYDOWN(VK_ESCAPE))
+	
+	UCHAR primary_buffer = NULL;
+	if (KEYDOWN(VK_ESCAPE))
 	{
 		PostMessage(Main_Hwnd, WM_DESTROY, 0, 0);
 	}
-	memset(&ddsd, 0, sizeof(ddsd));
-	ddsd.dwSize = sizeof(ddsd);
-
-	memset(&ddsd, 0, sizeof(ddsd));
-	ddsd.dwSize = sizeof(ddsd);
-
-	if(lpddsprimary==nullptr)
-	{
-		return  0;
-	}
-	if (FAILED(lpddsprimary->Lock(nullptr, &ddsd,
-		DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT,
-		nullptr)))
-	{
-		return(0);
-	}
-	int mempitch = (int)ddsd.lPitch;
-	UCHAR *video_buffer = (UCHAR *)ddsd.lpSurface;
-
-	for (int index = 0; index < 1000; index++)
-	{
-		UCHAR color = rand() % 256;
-		int x = rand() % SCREEN_HEIGHT;
-		int y = rand() % SCREEN_WIDTH;
-
-		video_buffer[x + y * (mempitch>>1)] = color;
-	}
-
-	if (FAILED(lpddsprimary->Unlock(NULL)))
-		return(0);
-
-	Sleep(30);
+	memset((void*)primary_buffer, 0, SCREEN_WIDTH*SCREEN_HEIGHT);
 	return(1);
-
-	//主进程
-	return 1;
 }
 //*******************游戏结束的操作********************
 int Game_Shutdown(void *parms=NULL)
@@ -159,7 +140,7 @@ int Game_Shutdown(void *parms=NULL)
 	{
 		lpdd->Release();
 		lpdd = NULL;
-	} // end if
+	} 
 	//结束
 	return 1;
 }
